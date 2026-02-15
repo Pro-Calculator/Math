@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 سیاره ریاضی - Math Planet</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700;900&display=swap');
+        
+        * {
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { Rocket, Zap, Star, Trophy, ShoppingCart, Home, Sparkles, Target, Flame } = lucide;
+
+        function MathPlanetGame() {
+          const [energy, setEnergy] = useState(0);
+          const [level, setLevel] = useState(1);
+          const [streak, setStreak] = useState(0);
+          const [highStreak, setHighStreak] = useState(0);
+          const [currentQuestion, setCurrentQuestion] = useState(null);
+          const [userAnswer, setUserAnswer] = useState('');
+          const [showResult, setShowResult] = useState(null);
+          const [buildings, setBuildings] = useState([]);
+          const [decorations, setDecorations] = useState([]);
+          const [screen, setScreen] = useState('game');
+          const [combo, setCombo] = useState(1);
+          const [showCombo, setShowCombo] = useState(false);
+          const [particles, setParticles] = useState([]);
+
+          const shopItems = [
+            { id: 'rocket', name: '🚀 موشک فضایی', cost: 50, type: 'building', emoji: '🚀' },
+            { id: 'satellite', name: '🛰️ ماهواره', cost: 30, type: 'building', emoji: '🛰️' },
+            { id: 'lab', name: '🔬 آزمایشگاه', cost: 80, type: 'building', emoji: '🔬' },
+            { id: 'observatory', name: '🔭 رصدخانه', cost: 100, type: 'building', emoji: '🔭' },
+            { id: 'star', name: '⭐ ستاره', cost: 20, type: 'decoration', emoji: '⭐' },
+            { id: 'moon', name: '🌙 ماه', cost: 40, type: 'decoration', emoji: '🌙' },
+            { id: 'comet', name: '☄️ دنباله‌دار', cost: 60, type: 'decoration', emoji: '☄️' },
+            { id: 'alien', name: '👽 موجود فضایی', cost: 70, type: 'decoration', emoji: '👽' },
+          ];
+
+          const generateQuestion = () => {
+            const difficulty = Math.min(Math.floor(level / 2) + 1, 5);
+            let question, answer;
+            
+            const types = ['add', 'subtract', 'multiply', 'equation', 'fraction'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            switch(type) {
+              case 'add':
+                const a1 = Math.floor(Math.random() * (50 * difficulty)) + 10;
+                const b1 = Math.floor(Math.random() * (50 * difficulty)) + 10;
+                question = `${a1} + ${b1} = ؟`;
+                answer = a1 + b1;
+                break;
+              
+              case 'subtract':
+                const a2 = Math.floor(Math.random() * (60 * difficulty)) + 30;
+                const b2 = Math.floor(Math.random() * (a2 - 10)) + 10;
+                question = `${a2} - ${b2} = ؟`;
+                answer = a2 - b2;
+                break;
+              
+              case 'multiply':
+                const a3 = Math.floor(Math.random() * (10 * difficulty)) + 2;
+                const b3 = Math.floor(Math.random() * (10 * difficulty)) + 2;
+                question = `${a3} × ${b3} = ؟`;
+                answer = a3 * b3;
+                break;
+              
+              case 'equation':
+                const x = Math.floor(Math.random() * 20) + 1;
+                const c = Math.floor(Math.random() * 30) + 10;
+                const result = x + c;
+                question = `x + ${c} = ${result}، x = ؟`;
+                answer = x;
+                break;
+              
+              case 'fraction':
+                const num = Math.floor(Math.random() * 10) + 2;
+                const den = Math.floor(Math.random() * 10) + 2;
+                const multiplier = Math.floor(Math.random() * 5) + 2;
+                question = `${num}/${den} = ${num * multiplier}/؟`;
+                answer = den * multiplier;
+                break;
+            }
+            
+            setCurrentQuestion({ question, answer });
+          };
+
+          useEffect(() => {
+            generateQuestion();
+          }, []);
+
+          const createParticles = (x, y, color) => {
+            const newParticles = Array.from({ length: 12 }, (_, i) => ({
+              id: Date.now() + i,
+              x,
+              y,
+              color,
+              angle: (Math.PI * 2 * i) / 12,
+            }));
+            setParticles(prev => [...prev, ...newParticles]);
+            setTimeout(() => {
+              setParticles(prev => prev.filter(p => !newParticles.find(np => np.id === p.id)));
+            }, 1000);
+          };
+
+          const checkAnswer = () => {
+            const correct = parseInt(userAnswer) === currentQuestion.answer;
+            
+            if (correct) {
+              const bonusEnergy = Math.floor(10 * combo);
+              setEnergy(prev => prev + bonusEnergy);
+              setStreak(prev => prev + 1);
+              setCombo(prev => Math.min(prev + 0.5, 5));
+              setShowCombo(true);
+              setTimeout(() => setShowCombo(false), 1000);
+              
+              createParticles(50, 30, '#10b981');
+              
+              if (streak + 1 > highStreak) {
+                setHighStreak(streak + 1);
+              }
+              
+              if (energy + bonusEnergy >= level * 100) {
+                setLevel(prev => prev + 1);
+                createParticles(50, 50, '#fbbf24');
+              }
+              
+              setShowResult('correct');
+            } else {
+              setStreak(0);
+              setCombo(1);
+              setShowResult('wrong');
+              createParticles(50, 30, '#ef4444');
+            }
+            
+            setUserAnswer('');
+            setTimeout(() => {
+              setShowResult(null);
+              generateQuestion();
+            }, 1500);
+          };
+
+          const buyItem = (item) => {
+            if (energy >= item.cost) {
+              setEnergy(prev => prev - item.cost);
+              if (item.type === 'building') {
+                setBuildings(prev => [...prev, { ...item, id: Date.now() }]);
+              } else {
+                setDecorations(prev => [...prev, { ...item, id: Date.now() }]);
+              }
+            }
+          };
+
+          const GameScreen = () => (
+            <div className="min-h-screen bg-gradient-to-b from-indigo-950 via-purple-900 to-pink-900 text-white p-6 relative overflow-hidden">
+              {/* Animated stars background */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                {[...Array(50)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
+                    style={{
+                      left: `${Math.random() * 100}%`,
+                      top: `${Math.random() * 100}%`,
+                      animationDelay: `${Math.random() * 3}s`,
+                      animationDuration: `${2 + Math.random() * 3}s`
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Particles */}
+              {particles.map(particle => (
+                <div
+                  key={particle.id}
+                  className="absolute w-2 h-2 rounded-full pointer-events-none animate-ping"
+                  style={{
+                    left: `${particle.x}%`,
+                    top: `${particle.y}%`,
+                    backgroundColor: particle.color,
+                    transform: `translate(${Math.cos(particle.angle) * 50}px, ${Math.sin(particle.angle) * 50}px)`,
+                  }}
+                />
+              ))}
+
+              {/* Header Stats */}
+              <div className="relative z-10 flex justify-between items-start mb-8">
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-white/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Zap className="text-yellow-400" size={24} />
+                    <span className="text-2xl font-bold">{energy}</span>
+                    <span className="text-sm opacity-80">انرژی</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Trophy className="text-purple-400" size={20} />
+                    <span className="text-lg font-bold">سطح {level}</span>
+                  </div>
+                </div>
+
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-white/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Flame className="text-orange-400" size={24} />
+                    <span className="text-2xl font-bold">{streak}</span>
+                    <span className="text-sm opacity-80">Streak</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Star className="text-yellow-400" size={20} />
+                    <span className="text-sm">بهترین: {highStreak}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Combo Indicator */}
+              {showCombo && combo > 1 && (
+                <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
+                  <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-8 py-4 rounded-full text-3xl font-bold shadow-2xl">
+                    COMBO ×{combo.toFixed(1)}! 🔥
+                  </div>
+                </div>
+              )}
+
+              {/* Question Card */}
+              <div className="relative z-10 max-w-2xl mx-auto">
+                <div className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border-2 border-white/30 transform hover:scale-105 transition-transform">
+                  <div className="flex items-center justify-center mb-6">
+                    <Target className="text-cyan-400 ml-3" size={32} />
+                    <h2 className="text-3xl font-bold text-center">مسئله ریاضی</h2>
+                  </div>
+                  
+                  <div className="bg-white/10 rounded-2xl p-8 mb-6 text-center">
+                    <p className="text-4xl md:text-5xl font-bold text-cyan-300 mb-4">
+                      {currentQuestion?.question}
+                    </p>
+                  </div>
+
+                  {showResult && (
+                    <div className={`text-center text-2xl font-bold mb-4 animate-pulse ${
+                      showResult === 'correct' ? 'text-green-400' : 'text-red-400'
+                    }`}>
+                      {showResult === 'correct' ? '✅ آفرین! درسته!' : '❌ اشتباه بود!'}
+                      {showResult === 'correct' && (
+                        <div className="text-lg mt-2">+{Math.floor(10 * combo)} انرژی!</div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <input
+                      type="number"
+                      value={userAnswer}
+                      onChange={(e) => setUserAnswer(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && checkAnswer()}
+                      placeholder="جواب تو..."
+                      disabled={showResult !== null}
+                      className="flex-1 px-6 py-4 text-2xl text-center bg-white/20 border-2 border-white/30 rounded-2xl focus:outline-none focus:ring-4 focus:ring-cyan-400 disabled:opacity-50 text-white placeholder-white/50"
+                    />
+                    <button
+                      onClick={checkAnswer}
+                      disabled={!userAnswer || showResult !== null}
+                      className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl font-bold text-xl hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                    >
+                      بزن بریم! 🚀
+                    </button>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="mt-6 bg-white/10 rounded-full h-4 overflow-hidden backdrop-blur-sm border border-white/20">
+                  <div 
+                    className="h-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 transition-all duration-500 relative overflow-hidden"
+                    style={{ width: `${Math.min((energy / (level * 100)) * 100, 100)}%` }}
+                  >
+                    <div className="absolute inset-0 bg-white/30 animate-pulse" />
+                  </div>
+                </div>
+                <p className="text-center mt-2 text-sm opacity-80">
+                  {energy}/{level * 100} تا سطح بعد
+                </p>
+              </div>
+
+              {/* Bottom Navigation */}
+              <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 flex gap-4">
+                <button
+                  onClick={() => setScreen('planet')}
+                  className="bg-gradient-to-r from-purple-500 to-pink-600 px-8 py-4 rounded-full font-bold shadow-2xl hover:shadow-pink-500/50 transform hover:scale-110 transition-all flex items-center gap-2"
+                >
+                  <Home size={24} />
+                  سیاره من
+                </button>
+                <button
+                  onClick={() => setScreen('shop')}
+                  className="bg-gradient-to-r from-yellow-500 to-orange-600 px-8 py-4 rounded-full font-bold shadow-2xl hover:shadow-yellow-500/50 transform hover:scale-110 transition-all flex items-center gap-2"
+                >
+                  <ShoppingCart size={24} />
+                  فروشگاه
+                </button>
+              </div>
+            </div>
+          );
+
+          const PlanetScreen = () => (
+            <div className="min-h-screen bg-gradient-to-b from-indigo-950 via-purple-900 to-pink-900 text-white p-6">
+              <div className="max-w-4xl mx-auto">
+                <h1 className="text-4xl font-bold text-center mb-8 flex items-center justify-center gap-3">
+                  <Sparkles className="text-yellow-400" />
+                  سیاره من
+                  <Sparkles className="text-yellow-400" />
+                </h1>
+
+                {/* Planet Display */}
+                <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 backdrop-blur-xl rounded-3xl p-12 mb-6 border-2 border-white/20 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-purple-500/10" />
+                  
+                  {/* Central Planet */}
+                  <div className="relative z-10 w-48 h-48 mx-auto mb-8 bg-gradient-to-br from-blue-400 to-purple-600 rounded-full shadow-2xl flex items-center justify-center animate-pulse float-animation">
+                    <span className="text-6xl">🌍</span>
+                  </div>
+
+                  {/* Buildings Grid */}
+                  <div className="relative z-10">
+                    <h3 className="text-2xl font-bold mb-4 text-center">ساختمان‌ها</h3>
+                    <div className="grid grid-cols-4 gap-4 mb-6">
+                      {buildings.length === 0 ? (
+                        <div className="col-span-4 text-center text-white/50 py-8">
+                          هنوز ساختمانی نداری! برو فروشگاه 🏗️
+                        </div>
+                      ) : (
+                        buildings.map((building, idx) => (
+                          <div key={idx} className="bg-white/20 rounded-2xl p-4 text-center transform hover:scale-110 transition-transform">
+                            <div className="text-5xl mb-2">{building.emoji}</div>
+                            <div className="text-sm">{building.name}</div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <h3 className="text-2xl font-bold mb-4 text-center">تزئینات</h3>
+                    <div className="grid grid-cols-6 gap-3">
+                      {decorations.length === 0 ? (
+                        <div className="col-span-6 text-center text-white/50 py-8">
+                          سیاره‌ت رو قشنگ کن! ⭐
+                        </div>
+                      ) : (
+                        decorations.map((deco, idx) => (
+                          <div key={idx} className="bg-white/20 rounded-xl p-3 text-center transform hover:scale-110 transition-transform">
+                            <div className="text-4xl">{deco.emoji}</div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setScreen('game')}
+                  className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-4 rounded-2xl font-bold text-xl shadow-xl hover:shadow-cyan-500/50 transform hover:scale-105 transition-all"
+                >
+                  برگشت به بازی 🎮
+                </button>
+              </div>
+            </div>
+          );
+
+          const ShopScreen = () => (
+            <div className="min-h-screen bg-gradient-to-b from-indigo-950 via-purple-900 to-pink-900 text-white p-6">
+              <div className="max-w-4xl mx-auto">
+                <div className="flex justify-between items-center mb-8">
+                  <h1 className="text-4xl font-bold flex items-center gap-3">
+                    <ShoppingCart className="text-yellow-400" />
+                    فروشگاه فضایی
+                  </h1>
+                  <div className="bg-white/20 backdrop-blur-md px-6 py-3 rounded-full flex items-center gap-2">
+                    <Zap className="text-yellow-400" />
+                    <span className="text-2xl font-bold">{energy}</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  {shopItems.map((item) => (
+                    <div key={item.id} className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-xl rounded-2xl p-6 border-2 border-white/20 hover:border-white/40 transition-all transform hover:scale-105">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="text-5xl">{item.emoji}</div>
+                          <div>
+                            <h3 className="text-xl font-bold">{item.name}</h3>
+                            <p className="text-sm opacity-70">{item.type === 'building' ? 'ساختمان' : 'تزئین'}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-yellow-400 text-xl font-bold">
+                          <Zap size={20} />
+                          {item.cost}
+                        </div>
+                        <button
+                          onClick={() => buyItem(item)}
+                          disabled={energy < item.cost}
+                          className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-2 rounded-xl font-bold disabled:opacity-30 disabled:cursor-not-allowed hover:from-green-600 hover:to-emerald-700 transform hover:scale-110 transition-all"
+                        >
+                          بخر! 💰
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setScreen('game')}
+                  className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-4 rounded-2xl font-bold text-xl shadow-xl hover:shadow-cyan-500/50 transform hover:scale-105 transition-all"
+                >
+                  برگشت به بازی 🎮
+                </button>
+              </div>
+            </div>
+          );
+
+          return (
+            <>
+              {screen === 'game' && <GameScreen />}
+              {screen === 'planet' && <PlanetScreen />}
+              {screen === 'shop' && <ShopScreen />}
+            </>
+          );
+        }
+
+        ReactDOM.render(<MathPlanetGame />, document.getElementById('root'));
+    </script>
+</body>
+</html>
